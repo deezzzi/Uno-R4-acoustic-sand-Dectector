@@ -19,7 +19,7 @@ This branch contains the API implementation used for the Gas Pipeline Acoustic S
   **Do not set** `NEXT_PUBLIC_API_URL` to the same URL as your API route (e.g., `https://uno-r4.vercel.app/api`), as that creates an infinite loop. Instead, this variable must point to a publicly accessible sensor data endpoint.  
   Example for a production sensor API:
   ```env
-  NEXT_PUBLIC_API_URL=https://mysensorapi.example.com/data
+  NEXT_PUBLIC_API_URL=https://unor4.vercel.app/api
   ```
 
 ## Environment Setup
@@ -28,7 +28,7 @@ For local development, create a `.env.local` file with the following sample cont
 
 ```env
 # Replace the below URL with your actual sensor API endpoint.
-NEXT_PUBLIC_API_URL=http://localhost:4000/data
+NEXT_PUBLIC_API_URL=http://localhost:3000/data
 ```
 
 First, run the development server:
@@ -45,13 +45,7 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
-For production on Vercel, set the environment variable in the Vercel dashboard:
 
 - **Key:** `NEXT_PUBLIC_API_URL`
 - **Value:** (A publicly accessible sensor API endpoint, e.g., `https://sensorapi.example.com/data`)
