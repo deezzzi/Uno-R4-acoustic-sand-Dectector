@@ -1,6 +1,5 @@
 // import { NextResponse } from 'next/server';
 
-// This function handles GET requests to the API proxy. It fetches data from the specified API_URL, handles errors, and returns the data as a JSON response.
 
 // export async function GET() {
 //   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://192.168.0.106';
@@ -14,8 +13,11 @@
 
 import { NextResponse } from 'next/server';
 
+// This function handles GET requests to the API proxy. It fetches data from the specified API_URL, handles errors, and returns the data as a JSON response.
+
+
 export async function GET() {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://192.168.0.106';
   if (!API_URL) {
     return NextResponse.error();
   }
