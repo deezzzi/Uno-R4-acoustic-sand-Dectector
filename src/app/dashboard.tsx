@@ -5,7 +5,12 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Activity, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Activity, AlertTriangle, CheckCircle, Sun, Moon, Bell, RefreshCw, Settings, FileText, AlertCircle, Filter } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useTheme } from '@/components/ui/use-theme';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { DateRangePicker } from '@/components/ui/date-range-picker';
+import { Progress } from '@/components/ui/progress';
 
 // Define types for data
 interface SensorData {
@@ -29,6 +34,8 @@ const PipelineMonitor: React.FC = () => {
   const [status, setStatus] = useState<StatusType>('normal');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { theme, setTheme } = useTheme();
+  const [notifications, setNotifications] = useState([]);
  
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -94,9 +101,19 @@ const PipelineMonitor: React.FC = () => {
       <div className="mx-auto max-w-7xl space-y-8 flex-grow">
         {/* Header Section */}
         <div className="rounded-lg bg-white p-6 shadow-sm">
-          <h1 className="text-3xl font-bold tracking-tight"> 
-            Gas Pipeline Acoustic Sand Monitoring Device
-          </h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold tracking-tight">
+              Gas Pipeline Acoustic Sand Monitoring Device
+            </h1>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            >
+              <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+              <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            </Button>
+          </div>
           <p className="mt-2 text-gray-500">Real-time sand detection system</p>
         </div>
 
@@ -113,6 +130,26 @@ const PipelineMonitor: React.FC = () => {
             <div className="animate-pulse text-gray-500">Loading data...</div>
           </div>
         )}
+
+        {/* Quick Actions Menu */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <Button variant="outline" className="h-24 flex flex-col items-center justify-center">
+            <RefreshCw className="h-6 w-6 mb-2" />
+            Refresh Data
+          </Button>
+          <Button variant="outline" className="h-24 flex flex-col items-center justify-center">
+            <Settings className="h-6 w-6 mb-2" />
+            Settings
+          </Button>
+          <Button variant="outline" className="h-24 flex flex-col items-center justify-center">
+            <FileText className="h-6 w-6 mb-2" />
+            Reports
+          </Button>
+          <Button variant="outline" className="h-24 flex flex-col items-center justify-center">
+            <AlertCircle className="h-6 w-6 mb-2" />
+            Alerts
+          </Button>
+        </div>
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -190,6 +227,70 @@ const PipelineMonitor: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Recent Notifications Card */}
+          <Card className="transition-all hover:shadow-md">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="h-5 w-5 text-blue-500" />
+                Recent Notifications
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4 max-h-[300px] overflow-y-auto">
+                {notifications.map((notification, index) => (
+                  <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50">
+                    <div className={`rounded-full p-2 ${notification.type === 'warning' ? 'bg-yellow-100' : 'bg-green-100'}`}>
+                      {notification.type === 'warning' ? 
+                        <AlertTriangle className="h-4 w-4 text-yellow-600" /> : 
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                      }
+                    </div>
+                    <div>
+                      <p className="font-medium">{notification.title}</p>
+                      <p className="text-sm text-gray-500">{notification.message}</p>
+                      <time className="text-xs text-gray-400">{notification.time}</time>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* System Health Card */}
+          <Card className="transition-all hover:shadow-md">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5 text-blue-500" />
+                System Health
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm font-medium">CPU Usage</span>
+                    <span className="text-sm text-gray-500">75%</span>
+                  </div>
+                  <Progress value={75} className="h-2" />
+                </div>
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm font-medium">Memory</span>
+                    <span className="text-sm text-gray-500">45%</span>
+                  </div>
+                  <Progress value={45} className="h-2" />
+                </div>
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm font-medium">Storage</span>
+                    <span className="text-sm text-gray-500">60%</span>
+                  </div>
+                  <Progress value={60} className="h-2" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Chart Card */}
@@ -201,6 +302,26 @@ const PipelineMonitor: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            <div className="mb-4 flex flex-wrap gap-4">
+              <Select defaultValue="24h">
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Time Range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1h">Last Hour</SelectItem>
+                  <SelectItem value="24h">Last 24 Hours</SelectItem>
+                  <SelectItem value="7d">Last 7 Days</SelectItem>
+                  <SelectItem value="30d">Last 30 Days</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <DateRangePicker />
+              
+              <Button variant="outline">
+                <Filter className="mr-2 h-4 w-4" />
+                Advanced Filters
+              </Button>
+            </div>
             <div className="h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={historicalData}>
@@ -277,7 +398,7 @@ const PipelineMonitor: React.FC = () => {
           </div>
           <div className="mt-8 border-t border-gray-200 pt-6">
             <p className="text-center text-sm text-gray-500">
-              © {new Date().getFullYear()} Gas Pipeline Monitoring System. All rights reserved.
+              © {new Date().getFullYear()} BixyL Labs Innovation. All rights reserved.
             </p>
           </div>
         </div>
