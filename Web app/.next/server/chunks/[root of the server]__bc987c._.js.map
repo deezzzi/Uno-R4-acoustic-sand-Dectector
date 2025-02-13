@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 55, "column": 0}, "map": {"version":3,"sources":["file://F%3A/apps/Test%20Sandox/Development/Test-On/Uno-R4-acoustic-sand-Dectector-main/Web%20app/src/app/api/sensor/route.ts"],"sourcesContent":["import { NextResponse } from 'next/server';\r\n\r\nexport async function GET() {\r\n  const API_URL = process.env.NEXT_PUBLIC_API_URL;\r\n  if (!API_URL) {\r\n    return NextResponse.error();\r\n  }\r\n\r\n  try {\r\n    const response = await fetch(API_URL);\r\n    if (!response.ok) {\r\n      throw new Error(`Network response was not ok: ${response.statusText}`);\r\n    }\r\n    const data = await response.json();\r\n    return NextResponse.json(data);\r\n  } catch (error: any) {\r\n    return new NextResponse(JSON.stringify({ error: error.message }), { status: 500 });\r\n  }\r\n}\r\n"],"names":[],"mappings":";;;AAAA;;AAEO,eAAe;IACpB,MAAM,UAAU,QAAQ,GAAG,CAAC,mBAAmB;IAC/C,IAAI,CAAC,SAAS;QACZ,OAAO,gIAAA,CAAA,eAAY,CAAC,KAAK;IAC3B;IAEA,IAAI;QACF,MAAM,WAAW,MAAM,MAAM;QAC7B,IAAI,CAAC,SAAS,EAAE,EAAE;YAChB,MAAM,IAAI,MAAM,CAAC,6BAA6B,EAAE,SAAS,UAAU,EAAE;QACvE;QACA,MAAM,OAAO,MAAM,SAAS,IAAI;QAChC,OAAO,gIAAA,CAAA,eAAY,CAAC,IAAI,CAAC;IAC3B,EAAE,OAAO,OAAY;QACnB,OAAO,IAAI,gIAAA,CAAA,eAAY,CAAC,KAAK,SAAS,CAAC;YAAE,OAAO,MAAM,OAAO;QAAC,IAAI;YAAE,QAAQ;QAAI;IAClF;AACF"}},
+    {"offset": {"line": 80, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":"A"}}]
+}
