@@ -20,3 +20,4 @@ export async function GET() {
     return new NextResponse(JSON.stringify({ error: 'Unknown error occurred' }), { status: 500 });
   }
 }
+ 
