@@ -16,12 +16,12 @@ interface SensorData {
  
 interface HistoricalData {
   time: string;
-  sandLevel: number;
+  sandLevel: number; 
 }
 
 type StatusType = 'normal' | 'warning' | 'critical';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://192.168.226.10';
+// const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://192.168.0.106';
 
 const PipelineMonitor: React.FC = () => {
   const [currentData, setCurrentData] = useState<SensorData | null>(null);
@@ -29,24 +29,32 @@ const PipelineMonitor: React.FC = () => {
   const [status, setStatus] = useState<StatusType>('normal');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
+ 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(API_URL);
+      // Use the local proxy endpoint instead of calling API_URL directly.
+      const response = await fetch('/api');
+      if (!response.ok) {
+        throw new Error(`Network response was not ok: ${response.statusText}`);
+      }
       const data: SensorData = await response.json();
+  
+      // if (!data.sandLevel) throw new Error('0ops! Invalid data format');  
 
-      if (!data.sandLevel) throw new Error('Invalid data format');
-
+      if (data.sandLevel === undefined || data.sandLevel === null) {
+        throw new Error('0ops! Invalid data format');
+      }
+  
       setCurrentData(data);
-      setHistoricalData(prev => [
+      setHistoricalData((prev) => [
         ...prev,
         {
           time: new Date().toLocaleTimeString(),
           sandLevel: parseFloat(data.sandLevel.toFixed(2)),
-        }
+        },
       ].slice(-30)); // Keep last 30 readings
-
+  
       if (data.sandLevel > 1000) {
         setStatus('critical');
       } else if (data.sandLevel > 500) {
@@ -54,10 +62,12 @@ const PipelineMonitor: React.FC = () => {
       } else {
         setStatus('normal');
       }
-
+  
       setError(null);
     } catch (err) {
-      setError(`Failed to fetch data from sensor: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      setError(`Failed to fetch data from sensor: ${
+        err instanceof Error ? err.message : 'Unknown error'
+      }`);
     } finally {
       setIsLoading(false);
     }

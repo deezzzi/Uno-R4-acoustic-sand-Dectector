@@ -1,6 +1,12 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+
+
+  NEXT_PUBLIC_API_URL=https://your-production-sensor-api.com  
+
+
 # dependencies
+node_modules
 /node_modules
 /.pnp
 .pnp.*
