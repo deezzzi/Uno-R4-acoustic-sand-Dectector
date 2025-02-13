@@ -13,7 +13,10 @@ export async function GET() {
     }
     const data = await response.json();
     return NextResponse.json(data);
-  } catch (error: any) {
-    return new NextResponse(JSON.stringify({ error: error.message }), { status: 500 });
+  } catch (error: unknown) { // Changed from error: any to error: unknown
+    if (error instanceof Error) {
+      return new NextResponse(JSON.stringify({ error: error.message }), { status: 500 });
+    }
+    return new NextResponse(JSON.stringify({ error: 'Unknown error occurred' }), { status: 500 });
   }
 }
