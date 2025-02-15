@@ -38,6 +38,14 @@ interface HistoricalData {
 
 type StatusType = 'normal' | 'warning' | 'critical';
 
+// Define types for notifications (renamed to avoid conflict with the global Notification)
+interface AppNotification {
+  type: 'warning' | 'success'; // adjust types as needed
+  title: string;
+  message: string;
+  time: string;
+}
+
 // Main Dashboard Component
 const PipelineMonitor: React.FC = () => {
   const [currentData, setCurrentData] = useState<SensorData | null>(null);
@@ -46,7 +54,7 @@ const PipelineMonitor: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { theme, setTheme } = useTheme();
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications] = useState<AppNotification[]>([]);
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -80,8 +88,12 @@ const PipelineMonitor: React.FC = () => {
       }
 
       setError(null);
-    } catch (err: any) {
-      setError(`Failed to fetch data from sensor: ${err.message || 'Unknown error'}`);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(`Failed to fetch data from sensor: ${err.message}`);
+      } else {
+        setError('Failed to fetch data from sensor: Unknown error');
+      }
     } finally {
       setIsLoading(false);
     }
