@@ -391,14 +391,14 @@ const PipelineMonitor: React.FC = () => {
               <h3 className="text-sm font-semibold text-gray-600">Contact</h3>
               <ul className="mt-4 space-y-2">
                 <li className="text-sm text-gray-500">Emergency: +1 (555) 123-4567</li>
-                <li className="text-sm text-gray-500">Support: support@example.com</li>
-                <li className="text-sm text-gray-500">Technical: tech@example.com</li>
+                <li className="text-sm text-gray-500">Support: support@bixylabs.com</li>
+                <li className="text-sm text-gray-500">Technical: tech@bixylabs.com</li>
               </ul>
             </div>
           </div>
           <div className="mt-8 border-t border-gray-200 pt-6">
             <p className="text-center text-sm text-gray-500">
-              © {new Date().getFullYear()} BixyLabs Innovation. All rights reserved.
+              © {new Date().getFullYear()} -  BixyLabs Innovation. All rights reserved.
             </p>
           </div>
         </div>
