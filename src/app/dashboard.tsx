@@ -5,29 +5,40 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Activity, AlertTriangle, CheckCircle, Sun, Moon, Bell, RefreshCw, Settings, FileText, AlertCircle, Filter } from 'lucide-react';
+import {
+  Activity,
+  AlertTriangle,
+  CheckCircle,
+  Sun,
+  Moon,
+  Bell,
+  RefreshCw,
+  Settings,
+  FileText,
+  AlertCircle,
+  Filter
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/components/ui/use-theme';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { Progress } from '@/components/ui/progress';
 
-// Define types for data
+// Define types for sensor data
 interface SensorData {
   sandLevel: number;
   samplingRate?: number;
   sampleInterval?: number;
 }
- 
+
 interface HistoricalData {
   time: string;
-  sandLevel: number; 
+  sandLevel: number;
 }
 
 type StatusType = 'normal' | 'warning' | 'critical';
 
-// const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://192.168.0.106';
-
+// Main Dashboard Component
 const PipelineMonitor: React.FC = () => {
   const [currentData, setCurrentData] = useState<SensorData | null>(null);
   const [historicalData, setHistoricalData] = useState<HistoricalData[]>([]);
@@ -35,33 +46,31 @@ const PipelineMonitor: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { theme, setTheme } = useTheme();
-  const [notifications, setNotifications] = useState([]);
- 
+  const [notifications, setNotifications] = useState<any[]>([]);
+
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Use the local proxy endpoint instead of calling API_URL directly.
-      const response = await fetch('/api');
+      // Use the environment variable or fallback to '/api'
+      const response = await fetch(process.env.NEXT_PUBLIC_API_URL || '/api');
       if (!response.ok) {
         throw new Error(`Network response was not ok: ${response.statusText}`);
       }
       const data: SensorData = await response.json();
-  
-      // if (!data.sandLevel) throw new Error('0ops! Invalid data format');  
 
       if (data.sandLevel === undefined || data.sandLevel === null) {
-        throw new Error('0ops! Invalid data format');
+        throw new Error('Invalid data format');
       }
-  
+
       setCurrentData(data);
       setHistoricalData((prev) => [
         ...prev,
         {
           time: new Date().toLocaleTimeString(),
-          sandLevel: parseFloat(data.sandLevel.toFixed(2)),
+          sandLevel: parseFloat(data.sandLevel.toFixed(2))
         },
       ].slice(-30)); // Keep last 30 readings
-  
+
       if (data.sandLevel > 1000) {
         setStatus('critical');
       } else if (data.sandLevel > 500) {
@@ -69,12 +78,10 @@ const PipelineMonitor: React.FC = () => {
       } else {
         setStatus('normal');
       }
-  
+
       setError(null);
-    } catch (err) {
-      setError(`Failed to fetch data from sensor: ${
-        err instanceof Error ? err.message : 'Unknown error'
-      }`);
+    } catch (err: any) {
+      setError(`Failed to fetch data from sensor: ${err.message || 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }
@@ -85,7 +92,7 @@ const PipelineMonitor: React.FC = () => {
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  const getStatusColor = (status: StatusType) => {
+  const getStatusColor = (status: StatusType): string => {
     switch (status) {
       case 'critical':
         return 'bg-red-500';
@@ -120,7 +127,7 @@ const PipelineMonitor: React.FC = () => {
         {/* Error Alert */}
         {error && (
           <Alert variant="destructive" className="animate-in fade-in slide-in-from-top-2">
-            <AlertTriangle className="h-4 w-4" />    
+            <AlertTriangle className="h-4 w-4" />
             <AlertTitle>{error}</AlertTitle>
           </Alert>
         )}
@@ -165,9 +172,7 @@ const PipelineMonitor: React.FC = () => {
               <div className="text-4xl font-bold tracking-tight text-gray-900">
                 {currentData?.sandLevel?.toFixed(2) || '---'}
               </div>
-              <Badge 
-                className={`mt-2 transition-colors ${getStatusColor(status)}`}
-              >
+              <Badge className={`mt-2 transition-colors ${getStatusColor(status)}`}>
                 {status.toUpperCase()}
               </Badge>
             </CardContent>
@@ -193,10 +198,7 @@ const PipelineMonitor: React.FC = () => {
                 </div>
                 <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
                   <span className="text-sm font-medium">Connection:</span>
-                  <Badge 
-                    variant={error ? 'destructive' : 'default'}
-                    className="transition-colors"
-                  >
+                  <Badge variant={error ? 'destructive' : 'default'} className="transition-colors">
                     {error ? 'DISCONNECTED' : 'CONNECTED'}
                   </Badge>
                 </div>
@@ -241,10 +243,11 @@ const PipelineMonitor: React.FC = () => {
                 {notifications.map((notification, index) => (
                   <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50">
                     <div className={`rounded-full p-2 ${notification.type === 'warning' ? 'bg-yellow-100' : 'bg-green-100'}`}>
-                      {notification.type === 'warning' ? 
-                        <AlertTriangle className="h-4 w-4 text-yellow-600" /> : 
+                      {notification.type === 'warning' ? (
+                        <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                      ) : (
                         <CheckCircle className="h-4 w-4 text-green-600" />
-                      }
+                      )}
                     </div>
                     <div>
                       <p className="font-medium">{notification.title}</p>
@@ -314,9 +317,9 @@ const PipelineMonitor: React.FC = () => {
                   <SelectItem value="30d">Last 30 Days</SelectItem>
                 </SelectContent>
               </Select>
-              
+
               <DateRangePicker />
-              
+
               <Button variant="outline">
                 <Filter className="mr-2 h-4 w-4" />
                 Advanced Filters
@@ -326,14 +329,10 @@ const PipelineMonitor: React.FC = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={historicalData}>
                   <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                  <XAxis
-                    dataKey="time"
-                    tick={{ fontSize: 12 }}
-                    interval="preserveStartEnd"
-                  />
+                  <XAxis dataKey="time" tick={{ fontSize: 12 }} interval="preserveStartEnd" />
                   <YAxis />
-                  <Tooltip 
-                    contentStyle={{ 
+                  <Tooltip
+                    contentStyle={{
                       backgroundColor: 'white',
                       border: 'none',
                       borderRadius: '8px',
@@ -398,15 +397,7 @@ const PipelineMonitor: React.FC = () => {
           </div>
           <div className="mt-8 border-t border-gray-200 pt-6">
             <p className="text-center text-sm text-gray-500">
-<<<<<<< HEAD
-<<<<<<< HEAD
               © {new Date().getFullYear()} BixyL Labs Innovations. All rights reserved.
-=======
-              © {new Date().getFullYear()} BixyLabs Innovation. All rights reserved.
->>>>>>> api
-=======
-              © {new Date().getFullYear()} -  BixyLabs Innovation. All rights reserved.
->>>>>>> api
             </p>
           </div>
         </div>
