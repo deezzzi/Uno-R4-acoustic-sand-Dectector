@@ -399,9 +399,13 @@ const PipelineMonitor: React.FC = () => {
           <div className="mt-8 border-t border-gray-200 pt-6">
             <p className="text-center text-sm text-gray-500">
 <<<<<<< HEAD
+<<<<<<< HEAD
               © {new Date().getFullYear()} BixyL Labs Innovations. All rights reserved.
 =======
               © {new Date().getFullYear()} BixyLabs Innovation. All rights reserved.
+>>>>>>> api
+=======
+              © {new Date().getFullYear()} -  BixyLabs Innovation. All rights reserved.
 >>>>>>> api
             </p>
           </div>

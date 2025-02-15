@@ -1,3 +1,4 @@
+<<<<<<< HEAD
    // Minimal placeholder for API-only deployment
 
   //  export default function Page() {
@@ -5,6 +6,10 @@
   // }
 
   "use client";
+=======
+
+"use client";
+>>>>>>> api
 
 import PipelineMonitor from './dashboard';
 
