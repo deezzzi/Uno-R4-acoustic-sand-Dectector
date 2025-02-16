@@ -29,6 +29,7 @@ interface SensorData {
   sandLevel: number;      // Current sand level measurement in pipeline
   samplingRate?: number;  // Rate at which sensor collects data (Hz)
   sampleInterval?: number; // Time between samples (milliseconds)
+  timestamp?: number;     // Timestamp of measurement
 }
 
 // Historical data points for trending and analysis
@@ -51,11 +52,12 @@ interface AppNotification {
 // Main Dashboard Component for Pipeline Monitoring System
 // Handles real-time data visualization, system status, and alerts
 const PipelineMonitor: React.FC = () => {
-  const [currentData, setCurrentData] = useState<SensorData | null>(null);
-  const [historicalData, setHistoricalData] = useState<HistoricalData[]>([]);
+  // Initial state with default values
+  const [currentData, setCurrentData] = useState<SensorData>({ sandLevel: 0 });
+  const [historicalData, setHistoricalData] = useState<SensorData[]>([]);
   const [status, setStatus] = useState<StatusType>('normal');
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // Start with false to avoid hydration mismatch
   const { theme, setTheme } = useTheme();
   const [notifications] = useState<AppNotification[]>([]);
 
@@ -64,22 +66,22 @@ const PipelineMonitor: React.FC = () => {
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL || '');
+      // Default to hardware URL if env variable is not set
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://192.168.0.106';
+      console.log('Fetching from:', apiUrl); // Debug log
+
+      const response = await fetch(apiUrl, {
+        mode: 'cors', // Enable CORS
+        cache: 'no-store' 
+      });
+
       if (!response.ok) {
-        throw new Error(`Network response was not ok: ${response.statusText}`);
-      }
-      const data: SensorData = await response.json();
-      console.log('Data from API:', data);
-
-      if (data.sandLevel === undefined || data.sandLevel === null) {
-        throw new Error('Invalid data format');
+        throw new Error(`Network response was not ok: ${response.status}`);
       }
 
+      const data = await response.json();
       setCurrentData(data);
-      setHistoricalData(prev => [...prev, {
-        time: new Date().toLocaleTimeString(),
-        sandLevel: parseFloat(data.sandLevel.toFixed(2))
-      }].slice(-30));
+      setHistoricalData(prev => [...prev, data].slice(-30));
 
       // Update status based on sand level
       setStatus(
@@ -89,18 +91,18 @@ const PipelineMonitor: React.FC = () => {
 
       setError(null);
     } catch (error) {
-      console.error('Error:', error);
-      setError(error instanceof Error ? error.message : 'Unknown error');
+      console.error('Error fetching data:', error);
+      setError('Failed to fetch sensor data');
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // Initialize data polling and cleanup on component mount/unmount
+  // Only start fetching after mount
   useEffect(() => {
-    fetchData(); // Initial data fetch
-    const interval = setInterval(fetchData, 10000); // Poll every 10 seconds for updates
-    return () => clearInterval(interval); // Cleanup interval on component unmount
+    fetchData();
+    const interval = setInterval(fetchData, 10000);
+    return () => clearInterval(interval);
   }, [fetchData]);
 
   // Maps status types to corresponding visual indicators
@@ -182,7 +184,7 @@ const PipelineMonitor: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="text-4xl font-bold tracking-tight text-gray-900">
-                {currentData?.sandLevel?.toFixed(2) || '---'}
+                {currentData.sandLevel?.toFixed(2) || '---'}
               </div>
               <Badge className={`mt-2 transition-colors ${getStatusColor(status)}`}>
                 {status.toUpperCase()}
@@ -202,11 +204,11 @@ const PipelineMonitor: React.FC = () => {
               <div className="space-y-3">
                 <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
                   <span className="text-sm font-medium">Sampling Rate:</span>
-                  <span className="font-mono">{currentData?.samplingRate?.toFixed(1) || '---'} Hz</span>
+                  <span className="font-mono">{currentData.samplingRate?.toFixed(1) || '---'} Hz</span>
                 </div>
                 <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
                   <span className="text-sm font-medium">Sample Interval:</span>
-                  <span className="font-mono">{currentData?.sampleInterval || '---'} ms</span>
+                  <span className="font-mono">{currentData.sampleInterval || '---'} ms</span>
                 </div>
                 <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
                   <span className="text-sm font-medium">Connection:</span>
