@@ -24,29 +24,32 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { Progress } from '@/components/ui/progress';
 
-// Define types for sensor data
+// Define comprehensive types for sensor-related data structures
 interface SensorData {
-  sandLevel: number;
-  samplingRate?: number;
-  sampleInterval?: number;
+  sandLevel: number;      // Current sand level measurement in pipeline
+  samplingRate?: number;  // Rate at which sensor collects data (Hz)
+  sampleInterval?: number; // Time between samples (milliseconds)
 }
 
+// Historical data points for trending and analysis
 interface HistoricalData {
-  time: string;
-  sandLevel: number;
+  time: string;          // Timestamp of measurement
+  sandLevel: number;     // Sand level at given timestamp
 }
 
+// System status indicators for pipeline conditions
 type StatusType = 'normal' | 'warning' | 'critical';
 
-// Define types for notifications (renamed to avoid conflict with the global Notification)
+// Notification structure for system alerts and messages
 interface AppNotification {
-  type: 'warning' | 'success'; // adjust types as needed
-  title: string;
-  message: string;
-  time: string;
+  type: 'warning' | 'success';  // Determines visual styling and urgency
+  title: string;                // Brief alert description
+  message: string;              // Detailed notification content
+  time: string;                 // Timestamp of notification
 }
 
-// Main Dashboard Component
+// Main Dashboard Component for Pipeline Monitoring System
+// Handles real-time data visualization, system status, and alerts
 const PipelineMonitor: React.FC = () => {
   const [currentData, setCurrentData] = useState<SensorData | null>(null);
   const [historicalData, setHistoricalData] = useState<HistoricalData[]>([]);
@@ -56,34 +59,19 @@ const PipelineMonitor: React.FC = () => {
   const { theme, setTheme } = useTheme();
   const [notifications] = useState<AppNotification[]>([]);
 
-  const fetchWithRetry = async (url: string, retries = 3): Promise<Response> => {
-    for (let i = 0; i < retries; i++) {
-      try {
-        const response = await fetch(url, {
-          headers: {
-            'Accept': 'application/json',
-          },
-          signal: AbortSignal.timeout(3000), // 3 second timeout
-        });
-        
-        if (!response.ok) throw new Error(response.statusText || 'HTTP error');
-        return response;
-      } catch (error) {
-        if (i === retries - 1) throw error;
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s before retry
-      }
-    }
-    throw new Error('Failed to fetch after retries');
-  };
-
+  // Primary data fetching function that updates all dashboard metrics
+  // Handles data validation, processing, and status updates
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api`;
-      const response = await fetchWithRetry(API_URL);
-      const data = await response.json();
-      console.log(data);
-      if (!data.sandLevel && data.sandLevel !== 0) {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_URL || '');
+      if (!response.ok) {
+        throw new Error(`Network response was not ok: ${response.statusText}`);
+      }
+      const data: SensorData = await response.json();
+      console.log('Data from API:', data);
+
+      if (data.sandLevel === undefined || data.sandLevel === null) {
         throw new Error('Invalid data format');
       }
 
@@ -93,7 +81,7 @@ const PipelineMonitor: React.FC = () => {
         sandLevel: parseFloat(data.sandLevel.toFixed(2))
       }].slice(-30));
 
-      // Update status
+      // Update status based on sand level
       setStatus(
         data.sandLevel > 1000 ? 'critical' :
         data.sandLevel > 500 ? 'warning' : 'normal'
@@ -108,12 +96,14 @@ const PipelineMonitor: React.FC = () => {
     }
   }, []);
 
+  // Initialize data polling and cleanup on component mount/unmount
   useEffect(() => {
-    fetchData(); // Initial fetch
-    const interval = setInterval(fetchData, 10000); // Change to 10 seconds
-    return () => clearInterval(interval);
+    fetchData(); // Initial data fetch
+    const interval = setInterval(fetchData, 10000); // Poll every 10 seconds for updates
+    return () => clearInterval(interval); // Cleanup interval on component unmount
   }, [fetchData]);
 
+  // Maps status types to corresponding visual indicators
   const getStatusColor = (status: StatusType): string => {
     switch (status) {
       case 'critical':
