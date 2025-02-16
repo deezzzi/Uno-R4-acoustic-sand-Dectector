@@ -59,41 +59,32 @@ const PipelineMonitor: React.FC = () => {
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Use the environment variable or fallback to '/api'
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL || '/api');
+      const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api`;
+      console.log('Fetching from:', API_URL); // Debug log
+      
+      const response = await fetch(API_URL, {
+        headers: {
+          'Accept': 'application/json',
+        },
+        // Add timeout
+        signal: AbortSignal.timeout(5000),
+      });
+  
       if (!response.ok) {
         throw new Error(`Network response was not ok: ${response.statusText}`);
       }
+      
       const data: SensorData = await response.json();
-
+      console.log('Received data:', data); // Debug log
+  
       if (data.sandLevel === undefined || data.sandLevel === null) {
         throw new Error('Invalid data format');
       }
-
+  
       setCurrentData(data);
-      setHistoricalData((prev) => [
-        ...prev,
-        {
-          time: new Date().toLocaleTimeString(),
-          sandLevel: parseFloat(data.sandLevel.toFixed(2))
-        },
-      ].slice(-30)); // Keep last 30 readings
-
-      if (data.sandLevel > 1000) {
-        setStatus('critical');
-      } else if (data.sandLevel > 500) {
-        setStatus('warning');
-      } else {
-        setStatus('normal');
-      }
-
-      setError(null);
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(`Failed to fetch data from sensor: ${err.message}`);
-      } else {
-        setError('Failed to fetch data from sensor: Unknown error');
-      }
+      // ... rest of your code
+    } catch (error) {
+      console.error('Error fetching data:', error);
     } finally {
       setIsLoading(false);
     }
