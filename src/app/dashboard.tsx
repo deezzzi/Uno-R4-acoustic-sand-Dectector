@@ -56,42 +56,61 @@ const PipelineMonitor: React.FC = () => {
   const { theme, setTheme } = useTheme();
   const [notifications] = useState<AppNotification[]>([]);
 
+  const fetchWithRetry = async (url: string, retries = 3): Promise<Response> => {
+    for (let i = 0; i < retries; i++) {
+      try {
+        const response = await fetch(url, {
+          headers: {
+            'Accept': 'application/json',
+          },
+          signal: AbortSignal.timeout(3000), // 3 second timeout
+        });
+        
+        if (!response.ok) throw new Error(response.statusText || 'HTTP error');
+        return response;
+      } catch (error) {
+        if (i === retries - 1) throw error;
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s before retry
+      }
+    }
+    throw new Error('Failed to fetch after retries');
+  };
+
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
       const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api`;
-      console.log('Fetching from:', API_URL); // Debug log
-      
-      const response = await fetch(API_URL, {
-        headers: {
-          'Accept': 'application/json',
-        },
-        // Add timeout
-        signal: AbortSignal.timeout(5000),
-      });
-  
-      if (!response.ok) {
-        throw new Error(`Network response was not ok: ${response.statusText}`);
-      }
-      
-      const data: SensorData = await response.json();
-      console.log('Received data:', data); // Debug log
-  
-      if (data.sandLevel === undefined || data.sandLevel === null) {
+      const response = await fetchWithRetry(API_URL);
+      const data = await response.json();
+      console.log(data);
+      if (!data.sandLevel && data.sandLevel !== 0) {
         throw new Error('Invalid data format');
       }
-  
+
       setCurrentData(data);
-      // ... rest of your code
+      setHistoricalData(prev => [...prev, {
+        time: new Date().toLocaleTimeString(),
+        sandLevel: parseFloat(data.sandLevel.toFixed(2))
+      }].slice(-30));
+
+      // Update status
+      setStatus(
+        data.sandLevel > 1000 ? 'critical' :
+        data.sandLevel > 500 ? 'warning' : 'normal'
+      );
+
+      setError(null);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error:', error);
+      setError(error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    const interval = setInterval(fetchData, 1000);
+    fetchData(); // Initial fetch
+    const interval = setInterval(fetchData, 10000); // Change to 10 seconds
     return () => clearInterval(interval);
   }, [fetchData]);
 
