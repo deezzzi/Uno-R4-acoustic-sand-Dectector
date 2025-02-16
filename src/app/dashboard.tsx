@@ -66,13 +66,12 @@ const PipelineMonitor: React.FC = () => {
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Default to hardware URL if env variable is not set
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://192.168.0.106';
       console.log('Fetching from:', apiUrl); // Debug log
 
       const response = await fetch(apiUrl, {
-        mode: 'cors', // Enable CORS
-        cache: 'no-store' 
+        mode: 'cors',
+        cache: 'no-store'
       });
 
       if (!response.ok) {
@@ -80,22 +79,17 @@ const PipelineMonitor: React.FC = () => {
       }
 
       const data = await response.json();
+      console.log('Received data:', data); // Debug log
+
       setCurrentData(data);
       setHistoricalData(prev => [...prev, data].slice(-30));
-
-      // Update status based on sand level
-      setStatus(
-        data.sandLevel > 1000 ? 'critical' :
-        data.sandLevel > 500 ? 'warning' : 'normal'
-      );
-
       setError(null);
     } catch (error) {
       console.error('Error fetching data:', error);
       setError('Failed to fetch sensor data');
     } finally {
       setIsLoading(false);
-    }
+    } 
   }, []);
 
   // Only start fetching after mount
